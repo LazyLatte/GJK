@@ -228,33 +228,33 @@ int main(int argc, char** argv){
         double timeValue = glfwGetTime();
         float rad = deg2rad(timeValue) * 40.0f;
 
-        // triangle->move(glm::vec2(cos(timeValue * 0.3) * 0.01, sin(timeValue) * 0.01));
-        // triangle->rotate(rad - prevRad);
-        // square->move(glm::vec2(cos(timeValue * 2) * sin(timeValue) * 0.1, sin(-timeValue + 314) * sin((timeValue - 1) * 2) * 0.05));
-        // square->rotate(rad - prevRad);
+        triangle->move(glm::vec2(cos(timeValue * 0.3) * 0.01, sin(timeValue) * 0.01));
+        triangle->rotate(rad - prevRad);
+        square->move(glm::vec2(cos(timeValue * 2) * sin(timeValue) * 0.1, sin(-timeValue + 314) * sin((timeValue - 1) * 2) * 0.05));
+        square->rotate(rad - prevRad);
 
-        // shader2D->setUniformInt("trigger", GJK::TestCollision(triangle, square));
-        // shader2D->setUniformMatrix3x3("M", &triangle->getModelMatrix()[0][0]);
-        // triangle->draw();
+        shader2D->setUniformInt("trigger", GJK::TestCollision(triangle, square));
+        shader2D->setUniformMatrix3x3("M", &triangle->getModelMatrix()[0][0]);
+        triangle->draw();
 
-        // shader2D->setUniformMatrix3x3("M", &square->getModelMatrix()[0][0]);
-        // square->draw();
-        tetrahedron->rotate(glm::quat(cos(rad - prevRad), sin(rad - prevRad) * 0.5, sin(rad - prevRad) * 0.866, 0.0));
-        cube->rotate(glm::quat(cos(rad - prevRad), sin(rad - prevRad) * -0.866, sin(rad - prevRad) * -0.5, 0.0));
+        shader2D->setUniformMatrix3x3("M", &square->getModelMatrix()[0][0]);
+        square->draw();
+        // tetrahedron->rotate(glm::quat(cos(rad - prevRad), sin(rad - prevRad) * 0.5, sin(rad - prevRad) * 0.866, 0.0));
+        // cube->rotate(glm::quat(cos(rad - prevRad), sin(rad - prevRad) * -0.866, sin(rad - prevRad) * -0.5, 0.0));
 
-        tetrahedron->move(glm::vec3((rad - prevRad)*0.5, 0.0, 0.0));
-        cube->move(glm::vec3((rad - prevRad)*-0.5, 0.0, 0.0));
+        // tetrahedron->move(glm::vec3((rad - prevRad)*0.5, 0.0, 0.0));
+        // cube->move(glm::vec3((rad - prevRad)*-0.5, 0.0, 0.0));
 
-        shader3D->setUniformInt("trigger", GJK::TestCollision(tetrahedron, cube));
-        glm::mat4 view_matrix = glm::lookAt(camera, glm::vec3(0.0), glm::vec3(0.0, 1.0, 0.0));
-        shader3D->setUniformMatrix4x4("V", &view_matrix[0][0]);
+        // shader3D->setUniformInt("trigger", GJK::TestCollision(tetrahedron, cube));
+        // glm::mat4 view_matrix = glm::lookAt(camera, glm::vec3(0.0), glm::vec3(0.0, 1.0, 0.0));
+        // shader3D->setUniformMatrix4x4("V", &view_matrix[0][0]);
 
         
-        shader3D->setUniformMatrix4x4("M", &tetrahedron->getModelMatrix()[0][0]);
-        tetrahedron->draw();
+        // shader3D->setUniformMatrix4x4("M", &tetrahedron->getModelMatrix()[0][0]);
+        // tetrahedron->draw();
 
-        shader3D->setUniformMatrix4x4("M", &cube->getModelMatrix()[0][0]);
-        cube->draw();
+        // shader3D->setUniformMatrix4x4("M", &cube->getModelMatrix()[0][0]);
+        // cube->draw();
 
         prevRad = rad;
         glfwSwapBuffers(window);
