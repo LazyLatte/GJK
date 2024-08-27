@@ -13,129 +13,9 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "GJK.h"
-#include "Transform.h"
+#include "Polygon.h"
 #include "shader.h"
 #define deg2rad(x) ((x)*((3.1415926f)/(180.0f)))
-
-
-class Renderable {
-    private:
-        GLuint vao;
-        GLuint ebo;
-        GLuint position_buffer;
-        unsigned numOfVertex;
-    public:
-        Renderable(std::vector<glm::vec2> vertices, std::vector<unsigned> indices){
-            assert(vertices.size() > 0);
-            
-            glGenVertexArrays(1, &this->vao);
-            glGenBuffers(1, &this->position_buffer);
-
-            glBindVertexArray(this->vao);
-            glBindBuffer(GL_ARRAY_BUFFER, this->position_buffer);
-            glBufferData(GL_ARRAY_BUFFER, vertices.size() * 2 * sizeof(float), &vertices[0].x, GL_STATIC_DRAW);
-            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
-            glEnableVertexAttribArray(0);
-
-            glGenBuffers(1, &this->ebo);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->ebo);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned), &indices[0], GL_STATIC_DRAW);
-
-            this->numOfVertex = indices.size();
-        }
-        Renderable(std::vector<glm::vec3> vertices, std::vector<unsigned> indices){
-            glGenVertexArrays(1, &this->vao);
-            glGenBuffers(1, &this->position_buffer);
-
-            glBindVertexArray(this->vao);
-            glBindBuffer(GL_ARRAY_BUFFER, this->position_buffer);
-            glBufferData(GL_ARRAY_BUFFER, vertices.size() * 3 * sizeof(float), &vertices[0].x, GL_STATIC_DRAW);
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-            glEnableVertexAttribArray(0);
-
-            glGenBuffers(1, &this->ebo);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->ebo);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned), &indices[0], GL_STATIC_DRAW);
-
-            this->numOfVertex = indices.size();
-        }
-        void draw(){
-            glBindVertexArray(this->vao);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->ebo);
-            glDrawElements(GL_TRIANGLES, this->numOfVertex, GL_UNSIGNED_INT, (void*)0);
-            //glDrawArrays(GL_TRIANGLE_STRIP, 0, this->numOfVertex);
-        }
-};
-
-
-class ConvexPolygon2D : public GJK::GJK2D, public Renderable {
-    private:
-        Transform2D *transform;
-        std::vector<glm::vec2> vertices;
-    public:
-        ConvexPolygon2D(std::vector<glm::vec2> vertices, std::vector<unsigned> indices, glm::vec2 position): Renderable(vertices, indices){
-            this->vertices = vertices;
-            this->transform = new Transform2D(position);
-        }
-        ~ConvexPolygon2D(){
-            delete this->transform;
-        }
-        glm::vec2 furthestPoint(glm::vec2 dir) const override {
-            glm::vec2 target = glm::vec2(0.0);
-            float max_dot = -std::numeric_limits<float>::max();
-            glm::mat3 model_matrix = this->getModelMatrix();
-            for(auto &vertex : this->vertices){
-                glm::vec2 v = model_matrix * glm::vec3(vertex, 1.0);
-                float d = glm::dot(v, dir);
-                if(d > max_dot){
-                    max_dot = d;
-                    target = v;
-                }
-            }
-            return target;
-        }
-        void move(glm::vec2 d){this->transform->position +=d;}
-        void scale(glm::vec2 s){this->transform->scale *= s;}
-        void rotate(float rad){this->transform->rad += rad;}
-        glm::mat3 getModelMatrix() const {
-            return glm::translate(glm::rotate(glm::scale(glm::mat3(1.0), this->transform->scale), this->transform->rad), this->transform->position);
-        }
-};
-
-class ConvexPolygon3D : public GJK::GJK3D, public Renderable {
-    private:
-        Transform3D *transform;
-        std::vector<glm::vec3> vertices;
-
-    public:
-        ConvexPolygon3D(std::vector<glm::vec3> vertices, std::vector<unsigned> indices, glm::vec3 position): Renderable(vertices, indices){
-            this->vertices = vertices;
-            this->transform = new Transform3D(position);
-        }
-        ~ConvexPolygon3D(){
-            delete this->transform;
-        }
-        glm::vec3 furthestPoint(glm::vec3 dir) const override {
-            glm::vec3 target = glm::vec3(0.0);
-            float max_dot = -std::numeric_limits<float>::max();
-            glm::mat4 model_matrix = this->getModelMatrix();
-            for(auto &vertex : this->vertices){
-                glm::vec3 v = model_matrix * glm::vec4(vertex, 1.0);
-                float d = glm::dot(v, dir);
-                if(d > max_dot){
-                    max_dot = d;
-                    target = v;
-                }
-            }
-            return target;
-        }
-        void move(glm::vec3 d){this->transform->position +=d;}
-        void scale(glm::vec3 s){this->transform->scale *= s;}
-        void rotate(glm::quat q){this->transform->rotation *= q;}
-        glm::mat4 getModelMatrix() const {
-            return glm::translate(glm::mat4(1.0f), this->transform->position) * glm::mat4_cast(this->transform->rotation) * glm::scale(glm::mat4(1.0f), this->transform->scale);
-        }
-};
 
 glm::vec2 triangle_vertices[3] = {
     glm::vec2(0.0, 1.0),
@@ -211,8 +91,8 @@ int main(int argc, char** argv){
         return -1;
     }    
     
-    shader2D = new Shader("./vs.glsl", "./fs.glsl");
-    shader3D = new Shader("./vs-3d.glsl", "./fs.glsl");
+    shader2D = new Shader("./shaders/vs-2d.glsl", "./shaders/fs.glsl");
+    shader3D = new Shader("./shaders/vs-3d.glsl", "./shaders/fs.glsl");
     ConvexPolygon2D *triangle = new ConvexPolygon2D(std::vector<glm::vec2>(triangle_vertices, triangle_vertices+3), std::vector<unsigned>(triangle_indices, triangle_indices+3), glm::vec2(-1.0, 0.0));
     ConvexPolygon2D *square = new ConvexPolygon2D(std::vector<glm::vec2>(square_vertices, square_vertices+4), std::vector<unsigned>(square_indices, square_indices+6), glm::vec2(1.0, 0.0));
 

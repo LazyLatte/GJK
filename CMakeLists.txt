@@ -2,13 +2,18 @@ cmake_minimum_required(VERSION 3.5.0)
 project(GJK VERSION 0.1.0 LANGUAGES C CXX)
 
 include(C:/vcpkg/scripts/buildsystems/vcpkg.cmake)
-
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 find_package(GLEW REQUIRED)
 find_package(glfw3 CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 
-add_executable(${PROJECT_NAME} main.cpp GJK.h Transform.h shader.h)
+file(GLOB SRC_FILES 
+    "${PROJECT_SOURCE_DIR}/src/*.h"
+    "${PROJECT_SOURCE_DIR}/src/*.cpp"
+)
+
+add_executable(${PROJECT_NAME} main.cpp ${SRC_FILES})
 
 
 target_link_libraries(${PROJECT_NAME} PRIVATE GLEW::GLEW)
@@ -18,25 +23,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE glm::glm)
 add_custom_command(
     TARGET ${PROJECT_NAME}
     POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-            "${PROJECT_SOURCE_DIR}/vs.glsl"
-            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/vs.glsl"
-)
-
-add_custom_command(
-    TARGET ${PROJECT_NAME}
-    POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-            "${PROJECT_SOURCE_DIR}/vs-3d.glsl"
-            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/vs-3d.glsl"
-)
-
-add_custom_command(
-    TARGET ${PROJECT_NAME}
-    POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-            "${PROJECT_SOURCE_DIR}/fs.glsl"
-            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/fs.glsl"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${PROJECT_SOURCE_DIR}/shaders/"
+            "$<TARGET_FILE_DIR:${PROJECT_NAME}>/shaders"
 )
 
 
